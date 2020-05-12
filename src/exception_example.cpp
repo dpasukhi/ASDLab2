@@ -3,6 +3,7 @@
 #include <iostream>
 #include <typeinfo>
 #include <string>
+#include "include/table.h"
 
 using namespace std;
 class PositiveNumber
@@ -17,6 +18,26 @@ public:
 };
 int main()
 {
+  Table<char, int> A(5);
+
+  A.Add('k', 11);
+  A.Add('t', 54);
+
+  std::cout << A.Find('t')<<std::endl;
+  SortTable<char, int> C(A);
+  cout << C['k']<<std::endl;
+  SortTable<int, int> B(5);
+  B.Add(5, 11);
+  B.Add(10, 54);
+  B.Add(7, 54);
+  B.Delete(7);
+  try {
+    std::cout << B.Find(7) << std::endl;
+  }
+  catch(std::runtime_error)
+  {
+    cout << "Not found\n";
+  }
     //string a = "1";
     int a = -1;
     auto& ti1 = typeid(a);
