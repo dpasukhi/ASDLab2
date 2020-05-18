@@ -19,20 +19,25 @@ public:
 int main()
 {
   Table<char, int> A(5);
-
-  A.Add('k', 11);
-  A.Add('t', 54);
-
-  std::cout << A.Find('t')<<std::endl;
-  SortTable<char, int> C(A);
-  cout << C['k']<<std::endl;
-  SortTable<int, int> B(5);
-  B.Add(5, 11);
-  B.Add(10, 54);
-  B.Add(7, 54);
-  B.Delete(7);
-  try {
-    std::cout << B.Find(7) << std::endl;
+  try
+  {
+    A.Add('k', 11);
+    A.Add('t', 54);
+    A.Add('l', 22);
+    A.Add('h', 91);
+    A.Add('j', 84);
+    A.Add('b', 32);
+    std::cout << A.Find('t') << std::endl;
+    SortTable<char, int> C(A);
+    cout << C['k'] << std::endl;
+    SortTable<int, int> B(5);
+    B.Add(5, 2);
+    B.Add(10, 5);
+    B.Add(7, 3);
+    B.Add(8, 4);
+    B.Add(0, 0);
+    B.Add(1, 1);
+    B.Delete(7);
   }
   catch(std::runtime_error)
   {

@@ -3,6 +3,7 @@
 #include <exception>
 #include <iostream>
 #include <algorithm>
+#include <ctime>
 
 
 template<class Key, class Data>
@@ -40,13 +41,11 @@ public:
   {
       dataArray = new Record<Key, Data>[size];
   }
-
   void Add(Key key, Data data) {
       dataArray[count].key = key;
       dataArray[count].data = data;
       ++count;
   }
-
   Data Find(Key key) {
     for (int i = 0; i < count; ++i)
         if (dataArray[i].key == key)
@@ -55,9 +54,23 @@ public:
   }
   template<class _Key, class _Data>
   friend class SortTable;
+  friend std::ostream& operator<<(std::ostream& os, const Record<Key, Data>& d);
 };
+template<class Key, class Data>
+void InsertSort(Record<Key, Data>* data,size_t size)
+{
+  for (int startIndex = 0; startIndex < size - 1; ++startIndex)
+  {
+    int smallestIndex = startIndex;
 
-
+    for (int currentIndex = startIndex + 1; currentIndex < size; ++currentIndex)
+    {
+      if (data[currentIndex].key < data[smallestIndex].key)
+        smallestIndex = currentIndex;
+    }
+    std::swap(data[startIndex], data[smallestIndex]);
+  }
+}
 template<class Key, class Data>
 class SortTable : public Table<Key, Data >
 {
@@ -69,10 +82,14 @@ public:
       this->count = table.count;
       for (int i = 0; i < this->count; ++i)
       {
-        //this->Add(table.dataArray[i].key, table.dataArray[i].data);
         this->dataArray[i] = table.dataArray[i];
       }
-      std::sort(this->dataArray, this->dataArray + this->count, [](Record<Key, Data>a, Record<Key, Data>b)->bool {return a.key < b.key; });
+      size_t start_time = clock();
+      //std::sort(this->dataArray, this->dataArray + this->count, [](Record<Key, Data>a, Record<Key, Data>b)->bool {return a.key < b.key; });
+      InsertSort(this->dataArray, this->count);
+      size_t end_time = clock();
+      size_t search_time = end_time - start_time;
+      std::cout << "Time:" << search_time;
     }
     void Add(Key key, Data data);
     Data Find(Key key);
@@ -96,50 +113,45 @@ SortTable<Key, Data>::SortTable(const SortTable<Key, Data>& table) {
 
 template<class Key, class Data>
 void SortTable<Key, Data>::Add(Key key, Data data) {
-  int i = 0;
-  while (i < this->count) {
-    if (this->dataArray[i].key <= key)
-    {
-      i++;
-      continue;
-    }
-    break;
+  int l = - 1, r = this->count;
+  while (l  < r - 1) {
+    int mid = (l + r) / 2;
+    if (this->dataArray[mid].key < key) l = mid;
+    else r = mid;
   }
-  for (int j = this->count; j > i; j--)
+  for (int j = this->count; j > r; j--)
   {
     this->dataArray[j].key = this->dataArray[j - 1].key;
     this->dataArray[j].data = this->dataArray[j - 1].data;
   }
-  this->dataArray[i].key = key;
-  this->dataArray[i].data = data;
+  this->dataArray[r].key = key;
+  this->dataArray[r].data = data;
   ++this->count;
 }
 
 template<class Key, class Data>
 Data SortTable<Key, Data>::Find(Key key) {
-  int l = 0, r = this->count - 1;
-  while (l + 1 < r) {
+  int l = -1, r = this->count;
+  while (l < r - 1) {
     int mid = (l + r) / 2;
-    if (this->dataArray[mid].key > key) r = mid;
-    else l = mid;
+    if (this->dataArray[mid].key < key) l = mid;
+    else r = mid;
   }
-  if (this->dataArray[l].key == key) return this->dataArray[l].data;
   if (this->dataArray[r].key == key) return this->dataArray[r].data;
   throw std::runtime_error("Not Found");
 }
 template<class Key, class Data>
 inline void SortTable<Key, Data>::Delete(const Key& key)
 {
-  int i = 0;
-  while (i < this->count) {
-    if (this->dataArray[i].key <= key)
-    {
-      i++;
-      continue;
-    }
-    break;
+  int l = -1, r = this->count;
+  while (l < r - 1) {
+    int mid = (l + r) / 2;
+    if (this->dataArray[mid].key < key) l = mid;
+    else r = mid;
   }
-  for (int j = i-1; j < this->count-1; j++)
+  if(l>r)
+    throw std::runtime_error("Not Found");
+  for (int j = r; j < this->count-1; j++)
   {
     this->dataArray[j].key = this->dataArray[j + 1].key;
     this->dataArray[j].data = this->dataArray[j + 1].data;
@@ -151,6 +163,7 @@ inline Data SortTable<Key, Data>::operator[](const Key& key)
 {
   return this->Find(key);
 }
+
 template<class Key, class Data>
 std::ostream& operator<<(std::ostream& os, const Record<Key, Data>& d)
 {
