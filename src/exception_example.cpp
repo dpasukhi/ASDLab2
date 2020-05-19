@@ -5,7 +5,18 @@
 #include <string>
 #include "include/table.h"
 
+#define SIZE 10
+
 using namespace std;
+
+//template<class Key=string,class Data>
+//unsigned StrHash(string _key)
+//{
+//  unsigned hash = 5381;
+//  for (int i = 0; i < _key.length(); i++)
+//    hash = ((hash << 5) + hash) + _key[i];
+//    return hash;
+//}
 class PositiveNumber
 {
     int positiveNumber;
@@ -38,8 +49,33 @@ int main()
     B.Add(0, 0);
     B.Add(1, 1);
     B.Delete(7);
+    //#############
+    Hash_Table<int, int> G(10);
+    G.Add(1, 3);
+    G.Add(2, 4);
+    cout << "\n" << G.Find(2) << endl;
+    G.Delete(1);
+    //############
+    function<size_t(string)> h = [&](string _key)->size_t
+      {
+        size_t hash = 5381;
+        for (int i = 0; i < _key.length(); i++)
+          hash = ((hash << 5) + hash) + _key[i];
+        return hash;
+      };
+    Hash_Table<string, int> S(10);
+    S.Add("234", 5);
+    S.Add("256", 6);
+    cout << "\n" << S.Find("234") << endl;
+    S.Delete("256");
+    cout << "\n" << S.Find("256") << endl;
+    //##############
   }
   catch(std::runtime_error)
+  {
+    cout << "Not found\n";
+  }
+  catch (char*)
   {
     cout << "Not found\n";
   }

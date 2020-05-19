@@ -4,17 +4,22 @@
 #include <iostream>
 #include <algorithm>
 #include <ctime>
-
-
+#include <functional>
+#include <string>
+#include <stdlib.h>
+#include <vector>
+#include <list>
+#include <optional>
 template<class Key, class Data>
 class Record {
 public:
     Key key;
     Data data;
-    
+    Record() {};
+    Record(Key _key, Data _data) :key(_key), data(_data) {};
     bool operator ==(const Key&);
     bool operator !=(const Key&);
-    friend std::ostream& operator<<(std::ostream& os, const Record<Key, Data>& d);
+   // friend std::ostream& operator<<(std::ostream& os, const Record<Key, Data>& d);
 };
 
 template<class Key, class Data>
@@ -169,4 +174,129 @@ std::ostream& operator<<(std::ostream& os, const Record<Key, Data>& d)
 {
   os << "|" << d.key << "| " << d.data << "|\n";
   return os;
+}
+//#################################################################################################
+
+template<class Key, class Data>
+class Hash_Table
+{
+private:
+  using HashFunc = std::function<size_t(Key)>;
+  int size;
+  int count;
+  HashFunc myHashFunc;
+  std::list<Record<Key, Data>>* dataArray;
+public:
+  Hash_Table(int _size = 5);
+  Hash_Table(HashFunc  hFunc,int _size = 5) :size(_size), myHashFunc(hFunc) {}
+  void Add(Key key, Data data);
+  Data Find(Key key);
+  virtual void Delete(const Key& key);
+  virtual Data operator[](const Key& key);
+};
+
+template<class Key, class Data>
+inline Hash_Table<Key, Data>::Hash_Table(int _size) : size(_size)
+{
+  this->dataArray = new std::list < Record<Key, Data>>[_size];
+    this->myHashFunc = [&](Key _key)
+    {
+      return ((15 * _key + 8) % (this->size + 6));
+    };
+}
+
+template<>
+inline Hash_Table<std::string, std::string>::Hash_Table(int _size) : size(_size)
+{
+  this->dataArray = new std::list < Record<std::string, std::string>>[_size];
+    this->myHashFunc = [&](std::string _key)
+    {
+      size_t hash = 5381;
+      for (int i = 0; i < _key.length(); i++)
+        hash = ((hash << 5) + hash) + _key[i];
+      return hash;
+    };
+}
+
+template<>
+inline Hash_Table<std::string, int>::Hash_Table(int _size) : size(_size)
+{
+  this->dataArray = new std::list < Record<std::string, int>>[_size];
+  this->myHashFunc = [&](std::string _key)
+  {
+    size_t hash = 5381;
+    for (int i = 0; i < _key.length(); i++)
+      hash = ((hash << 5) + hash) + _key[i];
+    return hash;
+  };
+}
+
+template<>
+inline Hash_Table<std::string, double>::Hash_Table(int _size) : size(_size)
+{
+  this->dataArray = new std::list < Record<std::string, double>>[_size];
+  this->myHashFunc = [&](std::string _key)
+  {
+    size_t hash = 5381;
+    for (int i = 0; i < _key.length(); i++)
+      hash = ((hash << 5) + hash) + _key[i];
+    return hash;
+  };
+}
+
+template<class Key, class Data>
+inline void Hash_Table<Key, Data>::Add(Key key, Data data)
+{
+  Record<Key, Data> rec;
+  rec.data = data; rec.key = key;
+  size_t _key =  this->myHashFunc(key)%this->size;
+  size_t  counter = 0;
+  this->dataArray[_key].push_back(rec);
+}
+
+template<class Key, class Data>
+inline Data Hash_Table<Key, Data>::Find(Key key)
+{
+  size_t  _key = this->myHashFunc(key) % this->size;
+  Data data;
+  bool isFound = false;
+  for (const auto& ent : this->dataArray[_key])
+  {
+    if (ent.key == key)
+    {
+      isFound = true;
+      data = ent.data;
+    }
+  }
+  if (!isFound)
+  {
+    throw "Find_Error";
+  }
+  return data;
+}
+
+template<class Key, class Data>
+inline void Hash_Table<Key, Data>::Delete(const Key& key)
+{
+  size_t _key = this->myHashFunc(key) % this->size;
+  bool isFound = false;
+  for (auto i=this->dataArray[_key].begin();i != this->dataArray[_key].end();i++)
+  {
+    if (i->key == key)
+    {
+      this->dataArray[_key].erase(i);
+      isFound = true;
+      break;
+    }
+  }
+  if (!isFound)
+  {
+    throw "Find_Error";
+  }
+}
+
+template<class Key, class Data>
+inline Data Hash_Table<Key, Data>::operator[](const Key& key)
+{
+  return this->Find(key);
 }
